@@ -72,6 +72,8 @@
 
 ## 从空目录安装旁挂系统
 
+想直接使用安装补丁包：见 [补丁包使用说明.md](补丁包使用说明.md)。Release 包包含 `install.sh`、`upgrade.sh`、`uninstall.sh`，可自动准备独立环境、备份、注册服务并生成插件；仍需已有 Hub/RAGFlow 和本机实际配置。以下保留手工部署流程。
+
 前置条件：先按上游文档部署并启动 QwenPaw Hub、至少一个用户的 Docker runtime 和 RAGFlow。获取本地 Hub `hub/` 数据目录及 RAGFlow API key。不要把密码或密钥贴到公共 issue。
 
 在下载或克隆出的仓库根目录执行：

@@ -474,7 +474,7 @@ async def page(request):
 
 
 async def health(request):
-    return JSONResponse({"ok": True, "service": "qwenpaw-sidecar", "version": "0.4.0"})
+    return JSONResponse({"ok": True, "service": "qwenpaw-sidecar", "version": "0.4.1"})
 
 
 class SecurityHeaders(BaseHTTPMiddleware):

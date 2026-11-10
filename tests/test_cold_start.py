@@ -64,6 +64,11 @@ class ColdStartContract(unittest.TestCase):
         fixture = http.server.ThreadingHTTPServer(("127.0.0.1", 0), FixtureService)
         thread = threading.Thread(target=fixture.serve_forever, daemon=True)
         thread.start()
+        def cleanup_fixture():
+            fixture.shutdown()
+            fixture.server_close()
+            thread.join(timeout=2)
+        self.addCleanup(cleanup_fixture)
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             hub = root / "hub"
@@ -108,7 +113,25 @@ class ColdStartContract(unittest.TestCase):
             policy_path = root / "state/data/permissions.sqlite3"
             with sqlite3.connect(str(policy_path)) as db:
                 self.assertEqual(db.execute("SELECT count(*) FROM subjects").fetchone()[0], 0)
-            process = subprocess.Popen(cmd + ["serve"], env=env, cwd=root,
+            smoke = os.environ.get("RUN_INSTALLER_SMOKE") == "1"
+            prefix = root / "patch-installed"
+            if smoke:
+                bundle = Path(__file__).resolve().parents[1]
+                installed_config = root / "installer-input.env"
+                installed_config.write_text(config.read_text().replace(
+                    str(root / "state"), str(root / "installed-state")), encoding="utf-8")
+                result = subprocess.run([sys.executable, str(bundle / "scripts/installer.py"),
+                    "install", "--prefix", str(prefix), "--config", str(installed_config),
+                    "--no-service"], cwd=root, env=env, capture_output=True, text=True, timeout=180)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn("synthetic-fixture-key", result.stdout + result.stderr)
+                manifest = json.loads((prefix / ".qwenpaw-sidecar-install.json").read_text())
+                command = [str(prefix / "current/.venv/bin/qwenpaw-sidecar"),
+                           "--config", manifest["config"], "serve"]
+                policy_path = root / "installed-state/data/permissions.sqlite3"
+            else:
+                command = cmd + ["serve"]
+            process = subprocess.Popen(command, env=env, cwd=root,
                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             try:
                 with httpx.Client(base_url=public, timeout=8, trust_env=False) as client:
@@ -166,9 +189,23 @@ class ColdStartContract(unittest.TestCase):
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait(timeout=3)
-                fixture.shutdown()
-                fixture.server_close()
-                thread.join(timeout=2)
+            if smoke:
+                with sqlite3.connect(str(policy_path)) as db:
+                    prior = {t: db.execute("SELECT * FROM " + t + " ORDER BY 1").fetchall()
+                             for t in ("roles", "subjects", "grants", "credentials")}
+                for operation in ("upgrade", "uninstall"):
+                    command = [sys.executable, str(bundle / "scripts/installer.py"),
+                               operation, "--prefix", str(prefix), "--no-service"]
+                    if operation == "uninstall":
+                        command.append("--yes")
+                    result = subprocess.run(command, env=env, cwd=root,
+                        capture_output=True, text=True, timeout=180)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertFalse((prefix / "current").is_symlink())
+                self.assertTrue(Path(manifest["config"]).is_file())
+                with sqlite3.connect(str(policy_path)) as db:
+                    after = {t: db.execute("SELECT * FROM " + t + " ORDER BY 1").fetchall() for t in prior}
+                self.assertEqual(prior, after)
 
 
 if __name__ == "__main__":
