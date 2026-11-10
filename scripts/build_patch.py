@@ -4,7 +4,9 @@ import argparse
 import hashlib
 import io
 import json
+import re
 import subprocess
+import sys
 import tarfile
 import zipfile
 
@@ -12,10 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def build(output):
-    import tomllib
-    version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
-    subprocess.run(["python", str(ROOT / "scripts/check_release.py")], check=True, cwd=ROOT)
-    status = subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT)
+    version = re.search(r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(),
+                        re.MULTILINE).group(1)
+    subprocess.run([sys.executable, str(ROOT / "scripts/check_release.py")], check=True, cwd=ROOT)
+    status = subprocess.check_output(["git", "-c", "core.filemode=false", "status",
+                                     "--porcelain", "--untracked-files=no"], cwd=ROOT)
     if status.strip():
         raise SystemExit("请先提交已追踪文件的修改，再生成发布补丁包")
     archive = subprocess.check_output(["git", "archive", "--format=tar", "HEAD"], cwd=ROOT)
