@@ -1,0 +1,8 @@
+{
+  "id": "knowledge-rbac-admin",
+  "name": "知识库与权限",
+  "version": "0.4.0",
+  "type": "frontend",
+  "description": "旁挂组织知识库权限管理入口",
+  "entry": { "frontend": "index.js" }
+}

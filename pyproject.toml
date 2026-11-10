@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qwenpaw-sidecar"
+version = "0.4.0"
+description = "Standalone RBAC, RAGFlow MCP gateway and capability distribution for QwenPaw Hub"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+  "mcp==1.30.0",
+  "starlette==1.10.0",
+  "httpx==0.28.1",
+  "uvicorn==0.54.0",
+  "PyYAML==6.0.3",
+  "cryptography==50.0.2",
+  "python-dotenv==1.2.4",
+]
+
+[project.scripts]
+qwenpaw-sidecar = "knowledge_rbac.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+knowledge_rbac = ["static/*.html", "plugin/*.js", "plugin/*.json"]

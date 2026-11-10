@@ -1,0 +1,21 @@
+[Unit]
+Description=QwenPaw Sidecar management and MCP service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Replace these paths and provision this service account before installing.
+User=qwenpaw-sidecar
+Group=qwenpaw-sidecar
+WorkingDirectory=/srv/qwenpaw-sidecar
+Environment=SIDECAR_CONFIG=/etc/qwenpaw-sidecar/sidecar.env
+ExecStart=/srv/qwenpaw-sidecar/.venv/bin/qwenpaw-sidecar serve
+Restart=on-failure
+RestartSec=5
+UMask=0077
+TimeoutStopSec=30
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

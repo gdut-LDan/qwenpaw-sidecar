@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>知识库与权限 · 系统管理</title>
+  <style>
+    :root{font-family:Inter,"Microsoft YaHei",system-ui,sans-serif;color:#18263c;background:#f4f6fa;font-size:14px}
+    *{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer;border:1px solid #d5ddeb;background:white;border-radius:8px;padding:9px 14px;color:inherit}
+    button:hover{background:#f1f5fc}button:disabled{opacity:.5;cursor:wait}button.primary{background:#255fe8;color:white;border-color:#255fe8}button.danger{color:#ad3342}button.active{background:#eaf0ff;color:#2054ce;border-color:#b9ccff}
+    input,select{border:1px solid #d5ddeb;border-radius:7px;padding:9px;background:white;max-width:100%}input:focus,select:focus,button:focus-visible{outline:3px solid #c6d6ff;outline-offset:2px}
+    input[type=checkbox]{width:18px;height:18px;accent-color:#255fe8;cursor:pointer}h1{font-size:25px;margin:0 0 8px}h2{font-size:18px;margin:0}h3{font-size:15px;margin:0}
+    p{line-height:1.7;margin:7px 0}.muted{color:#718098}.small{font-size:12px}.hidden{display:none!important}
+    header{background:#142641;color:white;min-height:76px;padding:20px 34px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    header strong{font-size:18px}header .muted{color:#afc0dc}header a{color:#d8e6ff;text-decoration:none}header button{color:#18263c}
+    main{max-width:1240px;padding:32px 28px 60px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}
+    .card{background:white;border:1px solid #e0e6ef;border-radius:13px;padding:24px;margin-bottom:20px;box-shadow:0 3px 16px #14264104}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    nav{display:flex;gap:8px;margin-bottom:24px;border-bottom:1px solid #dce3ee;padding-bottom:12px;overflow:auto;white-space:nowrap}
+    nav button{border-color:transparent;background:transparent}.badge{font-size:12px;padding:4px 9px;border-radius:6px;background:#edf2fb;color:#446086;display:inline-block}
+    .notice{background:#eef4ff;border-left:3px solid #6895f4;padding:12px 16px;border-radius:5px;color:#35527d;margin-bottom:22px;line-height:1.7}
+    table{border-collapse:collapse;width:100%;text-align:left}th{font-size:12px;color:#718098;background:#f8fafc;font-weight:500}
+    td,th{padding:14px 12px;border-bottom:1px solid #edf0f5;vertical-align:middle}td.center,th.center{text-align:center;width:130px}
+    .table-wrap{overflow:auto}.login{max-width:430px;margin:8vh auto}.login label{display:block;margin:18px 0 7px}.login input{width:100%}.login button{width:100%;margin-top:24px}
+    #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);padding:13px 22px;border-radius:9px;background:#172b48;color:white;box-shadow:0 6px 30px #0002;z-index:10;max-width:90vw}
+    #toast.error{background:#a73945}.error-text{color:#b63240}.empty{text-align:center;padding:36px;color:#8491a4}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}.summary>div{background:white;border:1px solid #e0e6ef;border-radius:10px;padding:17px 21px}.number{font-size:28px;margin-top:5px}
+    .agent-select{max-width:240px;font-size:12px}.user-name{font-weight:600;margin-bottom:4px}.role-description{max-width:700px;line-height:1.7}
+    textarea{font:inherit;width:100%;min-height:180px;padding:12px;border:1px solid #d5ddeb;border-radius:8px;resize:vertical;line-height:1.65}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:15px}.field label{font-size:13px;color:#526681}.field input:not([type=checkbox]),.field select{width:100%}
+    .targets{max-height:270px;overflow:auto;border:1px solid #e0e6ef;border-radius:8px;padding:8px}.target{display:flex;align-items:center;gap:10px;padding:9px;border-bottom:1px solid #edf0f5}.target:last-child{border:0}
+    .choice{display:flex;align-items:center;gap:8px;margin:7px 0}.code-preview{max-height:240px;overflow:auto;background:#f8fafc;padding:12px;white-space:pre-wrap;word-break:break-word;border:1px solid #e0e6ef;border-radius:7px;font-size:12px}
+    .status-succeeded{color:#21734e;background:#e9f8ef}.status-failed{color:#b63240;background:#fff0f1}.two-cols{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
+    @media(max-width:800px){.two-cols,.form-grid{grid-template-columns:1fr}header{padding:18px;align-items:flex-start}main{padding:22px 14px}.top{align-items:flex-start;flex-direction:column}.card{padding:16px}.summary{gap:8px}.summary>div{padding:12px}.row{gap:7px}}
+  </style>
+</head>
+<body>
+<header><div><strong>系统管理</strong><div class="muted small" style="margin-top:5px">组织知识库 · 访问授权 · 能力分发</div></div><div class="row"><a id="hubLink" href="#" target="_blank" rel="noopener">返回 QwenPaw ↗</a><span id="identity" class="small"></span><button id="logout" class="hidden">退出</button></div></header>
+<main>
+  <section id="loginView" class="card login hidden">
+    <span class="badge">管理员入口</span><h1 style="margin-top:18px">管理知识库访问权限</h1>
+    <p class="muted">仅配置指定的管理账号可进入。已登录 QwenPaw 时，可点击侧边栏入口直接进入。</p>
+    <form id="loginForm">
+      <label for="username">平台账号</label><input id="username" name="username" autocomplete="username" required>
+      <label for="password">密码</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+      <p id="loginError" class="error-text small" role="alert"></p><button class="primary" type="submit">登录系统管理</button>
+    </form>
+    <p class="small muted">其他账号即使具有 Hub admin 角色，也不会自动获得本后台管理权。此处不保存密码。</p>
+  </section>
+  <section id="workspace" class="hidden">
+    <div class="top"><div><h1>知识库与权限</h1><p class="muted">管理用户与资料访问，发布智能体模板并分发技能。</p></div><button id="refresh">刷新状态</button></div>
+    <div id="summary" class="summary"></div>
+    <nav aria-label="管理导航"><button data-tab="roles">角色管理</button><button data-tab="permissions" class="active">角色授权</button><button data-tab="users">用户与连接</button><button data-tab="templates">智能体模板</button><button data-tab="skills">技能分发</button><button data-tab="deliveries">分发记录</button><button data-tab="audit">操作记录</button></nav>
+    <section id="rolesPanel" class="hidden">
+      <div class="notice">每个用户只分配一个业务角色。新增角色默认没有知识库权限；停用角色暂停新访问，保留用户绑定和授权，启用后恢复。后台管理身份由部署配置单独指定。</div>
+      <div class="two-cols"><div class="card">
+        <div class="toolbar"><h2 id="roleEditorTitle">新增业务角色</h2><button id="resetRoleEditor" type="button">清空 / 新增</button></div>
+        <form id="roleForm">
+          <div class="field"><label for="roleName">角色名称</label><input id="roleName" placeholder="例如：局长、秘书、信息科" required maxlength="60"></div>
+          <div class="field"><label for="roleDescriptionInput">角色说明（可选）</label><textarea id="roleDescriptionInput" maxlength="500" style="min-height:100px" placeholder="说明角色的用途；权限请到“角色授权”中勾选。"></textarea></div>
+          <label class="choice"><input id="roleEnabled" type="checkbox" checked>启用角色</label>
+          <p id="roleEditHint" class="small muted">角色名称不会自动授予资料权限，也不会增加 Hub 平台管理权。</p>
+          <button id="saveRole" class="primary" type="submit" style="margin-top:12px">新增角色</button>
+        </form>
+      </div><div class="card">
+        <div class="toolbar"><h2>业务角色列表</h2><span class="muted small">支持修改名称、停用与重新启用</span></div>
+        <div class="table-wrap"><table><thead><tr><th>角色 / 说明</th><th>状态</th><th>已分配用户</th><th>操作</th></tr></thead><tbody id="roleRows"></tbody></table></div>
+        <p class="small muted">角色停用后不能再分配给新用户。长期撤销某个人的访问，请同时移除其角色或撤销个人凭证。此版不永久删除角色。</p>
+      </div></div>
+    </section>
+    <section id="permissionsPanel">
+      <div class="notice">在“角色管理”新增业务角色，在这里为角色勾选知识库权限。每个用户只分配一个角色；新用户、新角色和新增知识库默认不获得额外访问权限。</div>
+      <div class="card">
+        <div class="toolbar"><div class="row" id="roleButtons"></div><button id="sync">从 RAGFlow 同步知识库</button></div>
+        <p id="roleDescription" class="muted role-description"></p>
+        <div class="table-wrap"><table><thead><tr><th>知识库</th><th class="center">允许搜索</th><th class="center">允许读取正文</th></tr></thead><tbody id="grantRows"></tbody></table></div>
+        <div class="toolbar" style="margin:20px 0 0"><p class="muted small">搜索会返回相关片段；读取正文允许列出文档、分页展开原文。保存后新调用立即按新权限检查。</p><button id="saveGrants" class="primary">保存角色授权</button></div>
+      </div>
+    </section>
+    <section id="usersPanel" class="hidden">
+      <div class="notice">选择用户角色并保存，再为其已有智能体连接知识库。连接使用独立个人凭证；撤销不会影响其他用户。凭证有效期 <span id="credentialDays"></span> 天，可重新连接续期。</div>
+      <div class="card table-wrap"><table><thead><tr><th>平台用户</th><th>业务角色</th><th>连接到智能体</th><th>操作</th></tr></thead><tbody id="userRows"></tbody></table></div>
+      <p class="small muted">本页管理 RAGFlow 组织知识库。已有 WeKnora MCP 仍采用它自己的授权，未在此页面统一管理。用户已读到的旧会话内容不会因撤权自动消失。</p>
+    </section>
+    <section id="auditPanel" class="hidden"><div class="card"><h2 style="margin-bottom:16px">最近操作与访问</h2><p class="small muted">记录用户、动作和授权结果；不记录完整问题、文档正文或访问密钥。</p><div class="table-wrap"><table><thead><tr><th>时间</th><th>操作者</th><th>操作</th><th>结果</th><th>资源</th></tr></thead><tbody id="auditRows"></tbody></table></div></div></section>
+    <section id="templatesPanel" class="hidden">
+      <div class="notice">模板为可共享的指令和技能版本。在接收人自己的运行时新建独立助手，不复制聊天、记忆、模型配置或原用户的凭证；同名版本发布后不可修改。</div>
+      <div class="two-cols">
+        <div class="card"><h2 style="margin-bottom:18px">发布智能体模板</h2>
+          <form id="templateForm">
+            <div class="form-grid"><div class="field"><label for="templateKey">模板标识（英文）</label><input id="templateKey" placeholder="project-analyst" pattern="[A-Za-z][A-Za-z0-9_-]{0,47}" required></div><div class="field"><label for="templateVersion">版本</label><input id="templateVersion" value="1.0.0" required maxlength="32"></div></div>
+            <div class="field"><label for="templateName">助手名称</label><input id="templateName" placeholder="项目分析员" required maxlength="100"></div>
+            <div class="field"><label for="templateDescription">模板描述</label><input id="templateDescription" maxlength="1000" placeholder="用途、适用对象"></div>
+            <div class="field"><label for="templateSource">可选：展开已有助手的 AGENTS.md</label><div class="row"><select id="templateSource" class="agent-select"></select><button id="loadTemplateSource" type="button">展开指令</button></div></div>
+            <div class="field"><label for="templatePrompt">共享指令（新助手的 AGENTS.md）</label><textarea id="templatePrompt" required maxlength="100000" placeholder="你是项目分析员。先给结论，再核对资料并给出依据…"></textarea></div>
+            <div class="field"><label>依赖的已发布技能版本（可选）</label><div id="templateSkills" class="targets"></div></div>
+            <label class="choice"><input id="templateKnowledge" type="checkbox">为接收人连接组织知识库（须先分配业务角色）</label>
+            <label class="choice small"><input id="templateConfirm" type="checkbox" required>已确认指令不含个人资料、密码或密钥，可分享给目标用户</label>
+            <button class="primary" type="submit" style="margin-top:12px">发布模板版本</button>
+          </form>
+        </div>
+        <div class="card"><h2 style="margin-bottom:18px">分配模板</h2>
+          <div class="field"><label for="templateRelease">选择已发布模板</label><select id="templateRelease"></select></div>
+          <button type="button" id="previewTemplate">查看发布内容</button>
+          <div id="templatePreview" class="code-preview hidden" style="margin:12px 0"></div>
+          <div class="toolbar" style="margin-top:20px"><h3>选择接收用户</h3><span class="muted small">每个运行时创建一个独立助手</span></div>
+          <div id="templateTargets" class="targets"></div>
+          <p class="small muted">每次新分配都会新建助手；失败请到“分发记录”重试，避免重复分配。运行时未启动时，先让用户登录。不会覆盖旧助手或修改用户角色。</p>
+          <button id="assignTemplate" class="primary" style="margin-top:12px">分配给选中用户</button>
+        </div>
+      </div>
+    </section>
+    <section id="skillsPanel" class="hidden">
+      <div class="notice">发布技能版本后，可安装到其他用户的指定智能体。技能代码与资料将实际复制给接收人；请先检查内容。每个版本使用独立安装名，不覆盖个人同名技能；安装保留 QwenPaw 原生安全扫描。</div>
+      <div class="two-cols"><div class="card"><h2 style="margin-bottom:18px">发布技能版本</h2>
+        <form id="skillForm">
+          <div class="form-grid"><div class="field"><label for="skillKey">技能标识（英文）</label><input id="skillKey" placeholder="report-helper" pattern="[A-Za-z][A-Za-z0-9_-]{0,47}" required></div><div class="field"><label for="skillVersion">版本</label><input id="skillVersion" value="1.0.0" maxlength="32" required></div></div>
+          <div class="field"><label for="skillName">显示名称</label><input id="skillName" placeholder="报告助手技能" maxlength="100" required></div>
+          <div class="field"><label for="skillDescription">描述</label><input id="skillDescription" maxlength="1000"></div>
+          <div class="field"><label for="skillMode">技能来源</label><select id="skillMode"><option value="text">编写 SKILL.md（纯指令技能）</option><option value="source">从已有智能体发布（含附件）</option></select></div>
+          <div id="skillSourceBox" class="hidden">
+            <div class="field"><label for="skillSource">来源用户与智能体</label><div class="row"><select id="skillSource" class="agent-select"></select><button id="loadSourceSkills" type="button">列出技能</button></div></div>
+            <div class="field"><label for="sourceSkill">来源技能</label><div class="row"><select id="sourceSkill"></select><button id="previewSourceSkill" type="button">预览发布包</button></div></div>
+            <p id="skillFiles" class="small muted">预览后再发布。仅包含 SKILL.md、scripts、references 和 assets，不复制配置及环境变量。</p>
+          </div>
+          <div class="field"><label for="skillContent">SKILL.md 内容 / 来源预览</label><textarea id="skillContent" required maxlength="120000" placeholder="---&#10;name: report-helper&#10;description: 整理报告&#10;---&#10;请根据资料先列提纲，再生成报告。"></textarea></div>
+          <label class="choice small"><input id="skillConfirm" type="checkbox" required>已检查技能及附件，不含个人资料、密码或密钥，允许分发</label>
+          <button class="primary" type="submit" style="margin-top:12px">发布技能版本</button>
+        </form>
+      </div><div class="card"><h2 style="margin-bottom:18px">分发技能</h2>
+        <div class="field"><label for="skillRelease">选择已发布技能版本</label><select id="skillRelease"></select></div>
+        <button id="previewSkill">查看发布内容</button><div id="skillPreview" class="code-preview hidden" style="margin:12px 0"></div>
+        <div class="toolbar" style="margin-top:20px"><h3>选择目标智能体</h3><span class="muted small">支持跨用户多选</span></div><div id="skillTargets" class="targets"></div>
+        <p class="small muted">分发不会自动授予知识库、模型或外部工具权限。依赖的服务与配置需在接收用户侧具备。</p>
+        <button id="assignSkill" class="primary" style="margin-top:12px">安装到选中智能体</button>
+      </div></div>
+    </section>
+    <section id="deliveriesPanel" class="hidden"><div class="card"><div class="toolbar"><div><h2>分发记录</h2><p class="muted small">每个目标独立记录；运行时未启动、依赖缺失或扫描拒绝时可查看原因并重试。</p></div><button id="refreshDeliveries">刷新分发记录</button></div>
+      <div class="table-wrap"><table><thead><tr><th>发布版本 / 时间</th><th>接收用户 / 目标</th><th>结果</th><th>说明</th><th>操作</th></tr></thead><tbody id="deliveryRows"></tbody></table></div></div></section>
+  </section>
+  <p id="loading" class="empty">正在检查登录状态…</p>
+</main>
+<div id="toast" class="hidden" role="status"></div>
+<script type="application/json" id="appConfig">__SIDECAR_PUBLIC_CONFIG__</script>
+<script>
+let state=null,csrf="",activeRole="privileged",busy=false,toastTimer,editingRole=null;
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const appConfig=JSON.parse($("appConfig").textContent);
+$("hubLink").href=appConfig.hubUrl;
+$("credentialDays").textContent=appConfig.credentialDays;
+function toast(message,error=false){$("toast").textContent=message;$("toast").className=error?"error":"";clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.add("hidden"),6000)}
+async function api(path,body){const response=await fetch("/admin/api/"+path,{method:body===undefined?"GET":"POST",headers:body===undefined?{}:{"Content-Type":"application/json","X-CSRF-Token":csrf},body:body===undefined?undefined:JSON.stringify(body),credentials:"same-origin"});const data=await response.json();if(!response.ok)throw new Error(data.error||"请求失败");return data}
+async function action(fn){if(busy)return;busy=true;document.querySelectorAll("button").forEach(b=>b.disabled=true);try{await fn()}catch(e){toast(e.message,true)}finally{busy=false;document.querySelectorAll("button").forEach(b=>b.disabled=false)}}
+function showLogin(){csrf="";$("loading").classList.add("hidden");$("workspace").classList.add("hidden");$("loginView").classList.remove("hidden");$("logout").classList.add("hidden");$("identity").textContent=""}
+function showWorkspace(user){$("loading").classList.add("hidden");$("loginView").classList.add("hidden");$("workspace").classList.remove("hidden");$("logout").classList.remove("hidden");$("identity").textContent=user.username+" · 权限管理员"}
+async function load(){state=await api("state");render()}
+function render(){
+  $("summary").innerHTML=[["业务角色",state.roles.length],["已同步知识库",state.datasets.filter(d=>d.enabled).length],["平台用户",state.users.length]].map(([label,n])=>`<div><span class="muted small">${esc(label)}</span><div class="number">${n}</div></div>`).join("");
+  if(!state.roles.some(r=>r.id===activeRole))activeRole=state.roles[0]?.id||"";
+  $("roleButtons").innerHTML=state.roles.map(r=>`<button data-role="${esc(r.id)}" class="${r.id===activeRole?"active":""}">${esc(r.name)}${r.enabled?"":"（已停用）"}</button>`).join("");
+  document.querySelectorAll("[data-role]").forEach(b=>b.onclick=()=>{if(hasUnsaved()&&!confirm("当前授权修改尚未保存，是否切换角色并放弃修改？"))return;activeRole=b.dataset.role;renderGrants();document.querySelectorAll("[data-role]").forEach(x=>x.classList.toggle("active",x.dataset.role===activeRole))});
+  renderRoleManagement();renderGrants();renderUsers();renderAudit();renderDistribution();
+}
+function resetRoleForm(){editingRole=null;$("roleForm").reset();$("roleEnabled").checked=true;$("roleEditorTitle").textContent="新增业务角色";$("saveRole").textContent="新增角色";$("roleEditHint").textContent="角色名称不会自动授予资料权限，也不会增加 Hub 平台管理权。"}
+function confirmRoleDisable(role){return confirm("停用“"+role.name+"”？已分配的 "+role.user_count+" 个用户将立即暂停该角色的知识库新访问；重新启用后按原授权恢复。")}
+function renderRoleManagement(){
+  $("roleRows").innerHTML=state.roles.map(r=>`<tr><td><strong>${esc(r.name)}</strong><p class="muted small">${esc(r.description||"未填写说明")}</p></td><td><span class="badge ${r.enabled?"status-succeeded":"status-failed"}">${r.enabled?"已启用":"已停用"}</span></td><td>${Number(r.user_count)||0}</td><td><div class="row"><button data-role-edit="${esc(r.id)}">编辑</button><button data-role-toggle="${esc(r.id)}" class="${r.enabled?"danger":""}">${r.enabled?"停用":"启用"}</button><button data-role-grants="${esc(r.id)}">授权</button></div></td></tr>`).join("")||'<tr><td colspan="4" class="empty">暂无角色，请先新增。</td></tr>';
+  document.querySelectorAll("[data-role-edit]").forEach(b=>b.onclick=()=>{const r=state.roles.find(x=>x.id===b.dataset.roleEdit);editingRole={...r};$("roleName").value=r.name;$("roleDescriptionInput").value=r.description;$("roleEnabled").checked=Boolean(r.enabled);$("roleEditorTitle").textContent="编辑业务角色";$("saveRole").textContent="保存角色";$("roleEditHint").textContent="修改名称不会改变现有用户绑定、知识库授权或凭证。";$("roleName").focus()});
+  document.querySelectorAll("[data-role-toggle]").forEach(b=>b.onclick=()=>{const r=state.roles.find(x=>x.id===b.dataset.roleToggle);if(r.enabled&&!confirmRoleDisable(r))return;action(async()=>{await api("roles/update",{role_id:r.id,name:r.name,description:r.description,enabled:!r.enabled,revision:r.revision});if(editingRole?.id===r.id)resetRoleForm();await load();toast(r.enabled?"角色已停用，新访问立即暂停":"角色已启用，按现有授权恢复")})});
+  document.querySelectorAll("[data-role-grants]").forEach(b=>b.onclick=()=>{if(hasUnsaved()&&!confirm("当前知识库授权尚未保存，是否放弃修改并切换？"))return;activeRole=b.dataset.roleGrants;render();tab("permissions")});
+}
+$("resetRoleEditor").onclick=resetRoleForm;
+$("roleForm").onsubmit=e=>{e.preventDefault();const before=editingRole;if(before?.enabled&&!$("roleEnabled").checked&&!confirmRoleDisable(before))return;action(async()=>{const body={name:$("roleName").value,description:$("roleDescriptionInput").value,enabled:$("roleEnabled").checked};if(before){await api("roles/update",{...body,role_id:before.id,revision:before.revision})}else{const result=await api("roles/create",body);activeRole=result.role_id}resetRoleForm();await load();toast(before?"角色已更新，现有绑定保留":"角色已新增，请配置知识库授权并分配用户")})};
+function renderGrants(){
+  const role=state.roles.find(r=>r.id===activeRole);
+  if(!role){$("roleDescription").textContent="请先新增业务角色";$("grantRows").innerHTML="";return}
+  $("roleDescription").textContent="正在编辑："+role.name+"。"+(role.enabled?"只有下方明确勾选的权限会生效。":"角色已停用，当前授权不生效；可预先配置，启用后恢复。");
+  const datasets=state.datasets.filter(d=>d.enabled);
+  $("grantRows").innerHTML=datasets.length?datasets.map(d=>{const g=state.grants.find(g=>g.role_id===activeRole&&g.dataset_id===d.id)||{};return `<tr data-dataset="${esc(d.id)}"><td><div class="user-name">${esc(d.name)}</div><div class="muted small">${esc(d.id)}</div></td><td class="center"><input type="checkbox" data-perm="search" aria-label="${esc(d.name)} 搜索" ${g.search?"checked":""}></td><td class="center"><input type="checkbox" data-perm="read" aria-label="${esc(d.name)} 读取正文" ${g.read?"checked":""}></td></tr>`}).join(""):`<tr><td colspan="3" class="empty">暂无知识库，请先同步。</td></tr>`;
+}
+function collectGrants(){return [...document.querySelectorAll("#grantRows tr[data-dataset]")].map(row=>({dataset_id:row.dataset.dataset,search:row.querySelector('[data-perm="search"]').checked,read:row.querySelector('[data-perm="read"]').checked}))}
+function hasUnsaved(){if(!state)return false;return collectGrants().some(g=>{const old=state.grants.find(o=>o.role_id===activeRole&&o.dataset_id===g.dataset_id)||{};return Boolean(old.search)!==g.search||Boolean(old.read)!==g.read})}
+function renderUsers(){
+  const now=Date.now()/1000;
+  $("userRows").innerHTML=state.users.map((u,i)=>{
+    const assignment=state.subjects.find(s=>s.user_id===u.user_id);
+    const agents=state.agents[u.user_id]||[];
+    const count=state.credentials.filter(c=>c.user_id===u.user_id&&!c.revoked_at&&c.expires_at>now).length;
+    const assigned=state.roles.find(r=>r.id===assignment?.role_id);
+    return `<tr data-user-index="${i}"><td><div class="user-name">${esc(u.username)} ${u.disabled?'<span class="badge">已禁用</span>':""}</div><div class="muted small">${u.role==="admin"?"平台管理员":"平台用户"} · ${count} 个未撤销凭证${assigned&&!assigned.enabled?" · 角色已停用，访问暂停":""}</div></td>
+      <td><div class="row"><select data-user-role aria-label="${esc(u.username)} 业务角色"><option value="">未授权</option>${state.roles.filter(r=>r.enabled||assignment?.role_id===r.id).map(r=>`<option value="${esc(r.id)}" ${assignment?.role_id===r.id?"selected":""} ${!r.enabled?"disabled":""}>${esc(r.name)}${r.enabled?"":"（已停用）"}</option>`).join("")}</select><button data-save-user>保存</button></div></td>
+      <td><select class="agent-select" data-agent aria-label="${esc(u.username)} 智能体">${agents.length?agents.map((a,j)=>`<option value="${j}">${esc(a.agent_id)}</option>`).join(""):'<option value="">尚无运行时或智能体</option>'}</select></td>
+      <td><div class="row"><button data-connect>连接知识库</button><button data-revoke class="danger">撤销凭证</button></div></td></tr>`;
+  }).join("");
+  document.querySelectorAll("[data-user-index]").forEach(row=>{
+    const u=state.users[Number(row.dataset.userIndex)];
+    row.querySelector("[data-save-user]").onclick=()=>action(async()=>{await api("role",{user_id:u.user_id,role_id:row.querySelector("[data-user-role]").value||null});await load();toast("用户角色已保存，新调用立即生效")});
+    row.querySelector("[data-connect]").onclick=()=>action(async()=>{const index=row.querySelector("[data-agent]").value;if(index==="")throw new Error("请先在 QwenPaw 创建该用户的运行时和智能体");const a=state.agents[u.user_id][Number(index)];await api("connect",{user_id:u.user_id,...a});await load();toast("配置已连接。请用户重启自己的运行时，加载新的知识库凭证。")});
+    row.querySelector("[data-revoke]").onclick=()=>{if(confirm("撤销 "+u.username+" 的所有组织知识库凭证？重新连接后才能继续查询。"))action(async()=>{await api("revoke",{user_id:u.user_id});await load();toast("该用户的凭证已撤销")})};
+  });
+}
+function renderAudit(){
+  const names=Object.fromEntries(state.users.map(u=>[u.user_id,u.username]));
+  const labels={"role.create":"新增角色","role.update":"修改角色","roles.migrate":"迁移角色配置","role.assign":"分配角色","grants.replace":"修改角色授权","datasets.sync":"同步知识库","credential.issue":"签发个人凭证","credential.revoke":"撤销凭证","agent.connect":"连接智能体","knowledge.search":"知识搜索","knowledge.list":"列出知识库","document.read":"读取正文","document.list":"列出文档","admin.login":"后台登录","seed":"迁移现有权限","search":"搜索授权检查","read":"读取授权检查"};
+  $("auditRows").innerHTML=state.audit.length?state.audit.map(a=>`<tr><td class="small">${esc(new Date(a.ts*1000).toLocaleString("zh-CN"))}</td><td>${esc(names[a.actor]||a.actor)}</td><td>${esc(labels[a.action]||a.action)}</td><td><span class="badge" style="${a.allowed?"":"color:#b63240;background:#fff0f1"}">${a.allowed?"允许 / 成功":"拒绝"}</span></td><td class="small muted">${esc(a.resource||"—")}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">暂无操作记录。</td></tr>`;
+}
+function tab(name){document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));["roles","permissions","users","templates","skills","deliveries","audit"].forEach(x=>$(x+"Panel").classList.toggle("hidden",x!==name));if(state&&["templates","skills"].includes(name))renderDistribution()}
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+$("saveGrants").onclick=()=>action(async()=>{await api("grants",{role_id:activeRole,grants:collectGrants()});await load();toast("角色授权已保存，无需重启服务")});
+$("sync").onclick=()=>action(async()=>{if(hasUnsaved())throw new Error("请先保存或放弃当前授权修改");await api("sync",{});await load();toast("知识库已同步；新增库默认未授权")});
+$("refresh").onclick=()=>{if(!hasUnsaved()||confirm("刷新将放弃未保存的授权修改，是否继续？"))action(load)};
+$("logout").onclick=()=>action(async()=>{await api("logout",{});showLogin()});
+$("loginForm").onsubmit=e=>{e.preventDefault();action(async()=>{try{const result=await api("login",{username:$("username").value,password:$("password").value});csrf=result.csrf;$("password").value="";$("loginError").textContent="";showWorkspace(result.user);await load()}catch(error){$("password").value="";$("loginError").textContent=error.message;throw error}})};
+window.addEventListener("beforeunload",e=>{if(hasUnsaved()){e.preventDefault();e.returnValue=""}});
+let sourcePreview=null,sourceOptions=[],templateTargetOptions=[],skillTargetOptions=[],pendingBatch=null;
+function setOptions(id,items,empty){const old=$(id).value;$(id).innerHTML=items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")||`<option value="">${esc(empty)}</option>`;if(items.some(x=>String(x.value)===old))$(id).value=old}
+function renderDistribution(){
+  const releases=state.releases||[];
+  setOptions("templateRelease",releases.filter(a=>a.kind==="template").map(a=>({value:a.id,label:a.name+" · "+a.version})),"尚未发布模板");
+  setOptions("skillRelease",releases.filter(a=>a.kind==="skill").map(a=>({value:a.id,label:a.name+" · "+a.version})),"尚未发布技能");
+  const selected=new Set([...document.querySelectorAll("#templateSkills input:checked")].map(x=>x.value));
+  $("templateSkills").innerHTML=releases.filter(a=>a.kind==="skill").map(a=>`<label class="choice"><input type="checkbox" value="${esc(a.id)}" ${selected.has(a.id)?"checked":""}>${esc(a.name)} · ${esc(a.version)}</label>`).join("")||'<p class="muted small">先到“技能分发”发布技能版本，再选为模板依赖。</p>';
+  sourceOptions=[];templateTargetOptions=[];skillTargetOptions=[];
+  state.users.filter(u=>!u.disabled).forEach(u=>{
+    (state.agents[u.user_id]||[]).forEach(a=>{const value={user_id:u.user_id,...a,label:u.username+" / "+a.agent_id};sourceOptions.push(value);skillTargetOptions.push(value)});
+    (state.runtimes?.[u.user_id]||[]).forEach(r=>templateTargetOptions.push({user_id:u.user_id,runtime_id:r.runtime_id,label:u.username+" · "+(r.observed_state==="running"?"运行中":"未启动")}));
+  });
+  ["templateSource","skillSource"].forEach(id=>setOptions(id,sourceOptions.map((a,i)=>({value:i,label:a.label})),"暂无可选智能体"));
+  function targets(id,items){$(id).innerHTML=items.map((a,i)=>`<label class="target"><input type="checkbox" value="${i}"><span>${esc(a.label)}</span></label>`).join("")||'<p class="empty">暂无目标；请先在 Hub 创建用户并登录。</p>'}
+  targets("templateTargets",templateTargetOptions);targets("skillTargets",skillTargetOptions);renderDeliveryRows();
+}
+function renderDeliveryRows(){
+  const names=Object.fromEntries(state.users.map(u=>[u.user_id,u.username]));
+  const labels={queued:"等待执行",running:"执行中",succeeded:"成功",failed:"失败"};
+  $("deliveryRows").innerHTML=(state.jobs||[]).map(j=>`<tr><td><strong>${esc(j.asset_name)} · ${esc(j.version)}</strong><div class="muted small">${j.kind==="template"?"智能体模板":"技能"} · ${esc(new Date(j.created_at*1000).toLocaleString("zh-CN"))}</div></td><td>${esc(names[j.user_id]||j.user_id)}<div class="muted small">${esc(j.phase?.agent_id||j.agent_id||"新建助手")}</div></td><td><span class="badge status-${esc(j.status)}">${esc(labels[j.status]||j.status)}</span></td><td class="small muted">${esc(j.error||(j.phase?.installed_skill?"已安装："+j.phase.installed_skill:j.status==="succeeded"?"已完成；接收人刷新智能体列表即可":""))}</td><td>${j.status==="failed"?`<button data-retry="${esc(j.id)}">重试</button>`:"—"}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">暂无分发记录。先发布一个版本，再选择接收人。</td></tr>';
+  document.querySelectorAll("[data-retry]").forEach(b=>b.onclick=()=>action(async()=>{await api("distribution/retry",{job_id:b.dataset.retry});await refreshJobs();toast("已加入重试队列")}));
+}
+async function refreshJobs(){const next=await api("state");state.jobs=next.jobs;state.agents=next.agents;state.audit=next.audit;renderDeliveryRows()}
+$("refreshDeliveries").onclick=()=>action(refreshJobs);
+setInterval(()=>{if(!busy&&state&&(state.jobs||[]).some(j=>["queued","running"].includes(j.status)))refreshJobs().catch(()=>{})},3000);
+$("loadTemplateSource").onclick=()=>action(async()=>{const a=sourceOptions[Number($("templateSource").value)];if(!a)throw new Error("请选择来源智能体");if($("templatePrompt").value&&!confirm("展开将替换当前未发布的指令，是否继续？"))return;const r=await api("asset/source",{...a,kind:"template"});$("templatePrompt").value=r.prompt;toast(r.notice)});
+$("templateForm").onsubmit=e=>{e.preventDefault();action(async()=>{const result=await api("asset/publish",{kind:"template",asset_key:$("templateKey").value.trim(),version:$("templateVersion").value.trim(),name:$("templateName").value,description:$("templateDescription").value,payload:{prompt:$("templatePrompt").value,skills:[...$("templateSkills").querySelectorAll("input:checked")].map(x=>x.value),knowledge:$("templateKnowledge").checked}});await load();$("templateRelease").value=result.release_id;$("templateConfirm").checked=false;toast("模板版本已发布，可在右侧选择接收用户")})};
+$("skillMode").onchange=()=>{$("skillSourceBox").classList.toggle("hidden",$("skillMode").value!=="source");$("skillContent").readOnly=$("skillMode").value==="source";sourcePreview=null;$("skillContent").value="";$("skillFiles").textContent="请列出来源技能并预览发布包"};
+function clearSkillPreview(){sourcePreview=null;$("skillContent").value="";$("skillFiles").textContent="来源已改变，请重新预览发布包"}
+$("skillSource").onchange=()=>{clearSkillPreview();$("sourceSkill").innerHTML=""};$("sourceSkill").onchange=clearSkillPreview;
+$("loadSourceSkills").onclick=()=>action(async()=>{const a=sourceOptions[Number($("skillSource").value)];if(!a)throw new Error("请选择来源智能体");const result=await api("asset/source",{...a,kind:"skills"});setOptions("sourceSkill",result.skills.map(s=>({value:s.name,label:s.name})),"暂无技能");clearSkillPreview()});
+$("previewSourceSkill").onclick=()=>action(async()=>{const a=sourceOptions[Number($("skillSource").value)],name=$("sourceSkill").value;if(!a||!name)throw new Error("请先选择来源技能");const result=await api("asset/source",{...a,kind:"skill-preview",skill_name:name});sourcePreview={source:{...a,skill_name:name},digest:result.source_digest};$("skillContent").value=result.content;$("skillFiles").textContent="将发布 "+result.files.length+" 个文件："+result.files.join("、");if(!$("skillKey").value)$("skillKey").value=name;if(!$("skillName").value)$("skillName").value=name});
+function utf8base64(text){const bytes=new TextEncoder().encode(text);let binary="";for(const b of bytes)binary+=String.fromCharCode(b);return btoa(binary)}
+$("skillForm").onsubmit=e=>{e.preventDefault();action(async()=>{const body={kind:"skill",asset_key:$("skillKey").value.trim(),version:$("skillVersion").value.trim(),name:$("skillName").value,description:$("skillDescription").value};if($("skillMode").value==="source"){if(!sourcePreview)throw new Error("请先预览来源技能");body.source=sourcePreview.source;body.source_digest=sourcePreview.digest}else{body.payload={files:{"SKILL.md":utf8base64($("skillContent").value)}}}const result=await api("asset/publish",body);await load();$("skillRelease").value=result.release_id;$("skillConfirm").checked=false;toast("技能版本已发布，可在右侧选择目标智能体")})};
+async function previewRelease(id,box){if(!id)throw new Error("请先发布并选择版本");const r=await api("asset/detail",{release_id:id});$(box).textContent=r.payload.prompt||("文件："+r.payload.files.join("、")+"\n\n"+r.payload.content);$(box).classList.remove("hidden")}
+$("previewTemplate").onclick=()=>action(()=>previewRelease($("templateRelease").value,"templatePreview"));
+$("previewSkill").onclick=()=>action(()=>previewRelease($("skillRelease").value,"skillPreview"));
+function requestId(){const b=new Uint8Array(20);crypto.getRandomValues(b);return [...b].map(v=>v.toString(16).padStart(2,"0")).join("")}
+async function assign(kind){
+ const release=$(kind==="template"?"templateRelease":"skillRelease").value;
+ const options=kind==="template"?templateTargetOptions:skillTargetOptions;
+ const targets=[...$(kind==="template"?"templateTargets":"skillTargets").querySelectorAll("input:checked")].map(x=>options[Number(x.value)]).map(({label,...value})=>value);
+ if(!release||!targets.length)throw new Error("请选择已发布版本和接收目标");
+ if(!confirm("确认向 "+targets.length+" 个目标"+(kind==="template"?"创建独立助手":"安装此技能版本")+"？"))return;
+ const signature=JSON.stringify({release,targets});if(!pendingBatch||pendingBatch.signature!==signature)pendingBatch={signature,id:requestId()};
+ await api("distribution/queue",{release_id:release,targets,request_id:pendingBatch.id});pendingBatch=null;
+ await load();tab("deliveries");toast("已提交，执行结果会自动刷新");
+}
+$("assignTemplate").onclick=()=>action(()=>assign("template"));$("assignSkill").onclick=()=>action(()=>assign("skill"));
+(async()=>{try{const ticket=new URLSearchParams(location.hash.slice(1)).get("sso");if(ticket)history.replaceState(null,"",location.pathname);const result=ticket?await api("login",{sso_ticket:ticket}):await api("session");csrf=result.csrf;showWorkspace(result.user);await load()}catch(error){showLogin();$("loginError").textContent=error.message}})();
+</script>
+</body>
+</html>

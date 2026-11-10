@@ -1,0 +1,17 @@
+# Merge into your existing TLS virtual host; configure certificates for your own domain.
+server {
+    listen 443 ssl;
+    server_name sidecar.example.com;
+    ssl_certificate /etc/letsencrypt/live/sidecar.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sidecar.example.com/privkey.pem;
+
+    # URLs are root-based; a /some-prefix/ deployment is not supported in this version.
+    location / {
+        proxy_pass http://127.0.0.1:20600;
+        proxy_set_header Host $http_host;
+        proxy_set_header Connection "";
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_read_timeout 180s;
+    }
+}
