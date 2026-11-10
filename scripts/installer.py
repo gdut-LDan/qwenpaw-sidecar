@@ -80,9 +80,12 @@ def load_manifest(prefix):
     return manifest
 
 
-def validate_unit(path):
+def validate_unit(path, prefix=None):
     if path.exists() and (path.is_symlink() or UNIT_MARK not in path.read_text()):
         raise InstallError("已有同名 systemd 服务不属于本安装器，不会覆盖")
+    if path.exists() and prefix is not None and (
+            "WorkingDirectory=" + str(prefix) + "\n") not in path.read_text():
+        raise InstallError("同名服务属于另一个安装目录，不会覆盖或停止")
 
 
 def systemctl(*args):
@@ -248,7 +251,7 @@ def install(args):
     if not args.no_service:
         if os.geteuid() != 0:
             raise InstallError("注册 systemd 服务需使用 sudo；仅准备文件可用 --no-service")
-        validate_unit(unit)
+        validate_unit(unit, prefix)
     prefix.mkdir(parents=True, exist_ok=True)
     prefix.chmod(0o700)
     # A file lock serializes install/upgrade/uninstall on this prefix.
@@ -293,6 +296,13 @@ def install(args):
         data = Path(settings["data"]) / "data" / "permissions.sqlite3"
         if not upgrading and data.exists():
             raise InstallError("首次安装的配置指向已有权限数据库；请选择新数据目录，不能隐式接管")
+        if upgrading and data.exists():
+            with sqlite3.connect(data.as_uri() + "?mode=ro", uri=True) as db:
+                exists = db.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='distribution_jobs'").fetchone()
+                if exists and db.execute(
+                        "SELECT count(*) FROM distribution_jobs WHERE status IN ('queued','running')").fetchone()[0]:
+                    raise InstallError("存在未完成分发任务，升级未停止旧服务；请等待完成再升级")
         service_user = manifest.get("service_user") if upgrading else (
             args.service_user or pwd.getpwuid(os.getuid()).pw_name)
         if not re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_-]*", service_user):
@@ -386,7 +396,7 @@ def uninstall(args):
             if os.geteuid() != 0:
                 raise InstallError("移除 systemd 服务需 sudo")
             unit = Path("/etc/systemd/system") / UNIT_NAME
-            validate_unit(unit)
+            validate_unit(unit, prefix)
             if unit.exists():
                 systemctl("disable", "--now", UNIT_NAME)
                 unit.unlink()
@@ -420,7 +430,7 @@ def main(argv=None):
         else:
             install(args)
         return 0
-    except (InstallError, OSError, ValueError, sqlite3.Error, subprocess.SubprocessError) as e:
+    except (InstallError, OSError, ValueError, KeyError, sqlite3.Error, subprocess.SubprocessError) as e:
         print("安装器停止：" + (str(e) if isinstance(e, InstallError) else type(e).__name__),
               file=sys.stderr)
         print("已有代码与私密日志保留，未执行递归删除。", file=sys.stderr)

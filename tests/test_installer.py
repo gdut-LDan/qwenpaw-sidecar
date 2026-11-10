@@ -36,6 +36,9 @@ class InstallerContracts(unittest.TestCase):
         unit.write_text("[Service]\nExecStart=/some/application\n")
         with self.assertRaises(installer.InstallError):
             installer.validate_unit(unit)
+        unit.write_text(installer.UNIT_MARK + "\nWorkingDirectory=/different-installation\n")
+        with self.assertRaises(installer.InstallError):
+            installer.validate_unit(unit, prefix)
         self.assertEqual((prefix / "user-file").read_text(), "preserve")
 
     def test_configuration_copy_preserves_relative_path_meaning_without_overwrite(self):
